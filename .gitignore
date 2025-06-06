@@ -1,0 +1,9 @@
+build/
+.cache/
+.devcontainer/
+.vscode/*
+!.vscode/c_cpp_properties.json
+!.vscode/launch.json
+managed_components/
+sdkconfig
+sdkconfig.old
