@@ -74,4 +74,46 @@ menu "HackyClock configuration"
             int "Delay between slide animation frames (in ms)"
             default 20
     endmenu
+
+    menu "Wi-Fi"
+        config HC_WIFI_SSID
+            string "Wi-Fi SSID"
+            help
+                SSID (network name) to connect to.
+
+        config HC_WIFI_PASSWD
+            string "Wi-Fi Password"
+
+        config HC_WIFI_MAX_RETRY
+            int "Maximum retries count"
+            default 3
+            help
+                Limits the number of connection attempts
+
+        choice HC_WIFI_SCAN_AUTH_MODE_THRESHOLD
+            prompt "Scan auth mode threshold"
+            default HC_WIFI_AUTH_WPA2_PSK
+            help
+                The weakest authmode to accept in the scan mode.
+                This value defaults to HC_WIFI_AUTH_WPA2_PSK incase password is present and HC_WIFI_AUTH_OPEN is used.
+                Please select HC_WIFI_AUTH_WEP/HC_WIFI_AUTH_WPA_PSK incase AP is operating in WEP/WPA mode.
+
+            config HC_WIFI_AUTH_OPEN
+                bool "OPEN"
+            config HC_WIFI_AUTH_WEP
+                bool "WEP"
+            config HC_WIFI_AUTH_WPA_PSK
+                bool "WPA PSK"
+            config HC_WIFI_AUTH_WPA2_PSK
+                bool "WPA2 PSK"
+            config HC_WIFI_AUTH_WPA_WPA2_PSK
+                bool "WPA/WPA2 PSK"
+            config HC_WIFI_AUTH_WPA3_PSK
+                bool "WPA3 PSK"
+            config HC_WIFI_AUTH_WPA2_WPA3_PSK
+                bool "WPA2/WPA3 PSK"
+            config HC_WIFI_AUTH_WAPI_PSK
+                bool "WAPI PSK"
+        endchoice
+    endmenu
 endmenu
