@@ -3,4 +3,5 @@ idf_component_register(SRCS "main.c"
                             "canvas.c"
                             "app_manager.c"
                             "fonts.c"
-                    INCLUDE_DIRS "." "include")
+                            "image_utils.c"
+                    INCLUDE_DIRS "." "include" "../external/qoi")

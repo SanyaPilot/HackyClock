@@ -51,3 +51,21 @@ void cv_draw_symbol(struct canvas *cv, const struct bitmap_font *font, uint8_t s
             cv_set_pixel(cv, x + i, y + j, font_col & (font_high_bit >> j) ? color : crgb_black);
     }
 }
+
+// Draws image (raw RGB888 or RGBA8888 pixels)
+void cv_draw_image(struct canvas *cv, struct image_desc *img, uint8_t x, uint8_t y)
+{
+    // Convert raw bytes into crgb (ignore alpha for now), and fill canvas
+    for (uint8_t i = 0; i < (cv->height < img->height ? cv->height : img->height); i++) {
+        if (y + i >= cv->height)
+            break;
+        for (uint8_t j = 0; j < (cv->width < img->width ? cv->width : img->width); j++) {
+            if (x + j >= cv->width)
+                break;
+            size_t pos = (i * img->width + j) * img->channels;
+            uint8_t *pixels = img->pixels;
+            crgb pixel = { pixels[pos], pixels[pos + 1], pixels[pos + 2] };
+            cv_set_pixel(cv, x + j, y + i, pixel);
+        }
+    }
+}
