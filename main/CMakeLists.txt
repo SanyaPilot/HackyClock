@@ -1,2 +1,5 @@
-idf_component_register(SRCS "framebuffer.c" "main.c"
-                    INCLUDE_DIRS "include")
+idf_component_register(SRCS "main.c"
+                            "framebuffer.c"
+                            "canvas.c"
+                            "app_manager.c"
+                    INCLUDE_DIRS "." "include")

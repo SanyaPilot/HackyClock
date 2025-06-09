@@ -3,6 +3,7 @@
 #include "esp_log.h"
 #include "sdkconfig.h"
 #include "framebuffer.h"
+#include "apps.h"
 
 #if CONFIG_HC_STRIP_LED_TYPE_WS2812
 #define HC_LED_TYPE     LED_MODEL_WS2812
@@ -66,4 +67,12 @@ void app_main(void)
         fb->buf[y][CONFIG_HC_MATRIX_WIDTH - 1] = color;
     }
     fb_refresh(fb);
+    vTaskDelay(pdMS_TO_TICKS(1000));
+
+    // Launch app manager
+    ESP_LOGI(TAG, "Starting app manager");
+    struct am_params *am_params = pvPortMalloc(sizeof(struct am_params));
+    am_params->framebuffer = fb;
+    am_params->apps = registered_apps;
+    launch_am_task(am_params);
 }

@@ -1,65 +1,77 @@
 menu "HackyClock configuration"
-    config HC_STRIP_GPIO
-        int "LED strip data line GPIO"
-        default 15
-        help
-            Number of GPIO, which is connected to the LED strip data pin
+    menu "LED matrix"
+        config HC_STRIP_GPIO
+            int "LED strip data line GPIO"
+            default 15
+            help
+                Number of GPIO, which is connected to the LED strip data pin
 
-    choice HC_STRIP_LED_TYPE
-        prompt "LED strip type"
-        default HC_STRIP_LED_TYPE_WS2812
-        config HC_STRIP_LED_TYPE_WS2812
-            bool "WS2812"
-        config HC_STRIP_LED_TYPE_SK6812
-            bool "SK6812"
-        config HC_STRIP_LED_TYPE_WS2811
-            bool "WS2811"
-    endchoice
-    
-    choice HC_STRIP_COLOR_ORDER
-        prompt "LED strip color order"
-        default HC_STRIP_COLOR_ORDER_GRB
-        config HC_STRIP_COLOR_ORDER_GRB
-            bool "GRB"
-        config HC_STRIP_COLOR_ORDER_RGB
-            bool "RGB"
-    endchoice
+        choice HC_STRIP_LED_TYPE
+            prompt "LED strip type"
+            default HC_STRIP_LED_TYPE_WS2812
+            config HC_STRIP_LED_TYPE_WS2812
+                bool "WS2812"
+            config HC_STRIP_LED_TYPE_SK6812
+                bool "SK6812"
+            config HC_STRIP_LED_TYPE_WS2811
+                bool "WS2811"
+        endchoice
 
-    config HC_MATRIX_WIDTH
-        int "Matrix width"
-        default 16
-    
-    config HC_MATRIX_HEIGHT
-        int "Matrix height"
-        default 16
-    
-    choice HC_MATRIX_TYPE
-        prompt "Matrix type"
-        default HC_MATRIX_TYPE_SERPENTINE
-        help
-            Defines the type of connection between rows of LEDs
-        config HC_MATRIX_TYPE_SERPENTINE
-            bool "Serpentine"
-        config HC_MATRIX_TYPE_PARALLEL
-            bool "Parallel"
-    endchoice
+        choice HC_STRIP_COLOR_ORDER
+            prompt "LED strip color order"
+            default HC_STRIP_COLOR_ORDER_GRB
+            config HC_STRIP_COLOR_ORDER_GRB
+                bool "GRB"
+            config HC_STRIP_COLOR_ORDER_RGB
+                bool "RGB"
+        endchoice
 
-    choice HC_MATRIX_SERPENTINE_DIR
-        prompt "First row direction"
-        depends on HC_MATRIX_TYPE_SERPENTINE
-        default HC_MATRIX_SERPENTINE_DIR_NORMAL
-        help
-            Whether data signal is connected to the left (normal) or right (inversed)
-            side of the first row of matrix
-        config HC_MATRIX_SERPENTINE_DIR_NORMAL
-            bool "Normal"
-        config HC_MATRIX_SERPENTINE_DIR_INVERSED
-            bool "Inversed"
-    endchoice
+        config HC_MATRIX_WIDTH
+            int "Matrix width"
+            default 16
 
-    config HC_FB_BRIGHTNESS
-        int "Maximum brightness"
-        default 255
-        help
-            Defines the maximum brightness of LEDs, in range 0-255
+        config HC_MATRIX_HEIGHT
+            int "Matrix height"
+            default 16
+
+        choice HC_MATRIX_TYPE
+            prompt "Matrix type"
+            default HC_MATRIX_TYPE_SERPENTINE
+            help
+                Defines the type of connection between rows of LEDs
+            config HC_MATRIX_TYPE_SERPENTINE
+                bool "Serpentine"
+            config HC_MATRIX_TYPE_PARALLEL
+                bool "Parallel"
+        endchoice
+
+        choice HC_MATRIX_SERPENTINE_DIR
+            prompt "First row direction"
+            depends on HC_MATRIX_TYPE_SERPENTINE
+            default HC_MATRIX_SERPENTINE_DIR_NORMAL
+            help
+                Whether data signal is connected to the left (normal) or right (inversed)
+                side of the first row of matrix
+            config HC_MATRIX_SERPENTINE_DIR_NORMAL
+                bool "Normal"
+            config HC_MATRIX_SERPENTINE_DIR_INVERSED
+                bool "Inversed"
+        endchoice
+
+        config HC_FB_BRIGHTNESS
+            int "Maximum brightness"
+            default 255
+            help
+                Defines the maximum brightness of LEDs, in range 0-255
+    endmenu
+
+    menu "App manager"
+        config HC_AM_MAX_APPS
+            int "Maximum number of apps"
+            default 8
+
+        config HC_AM_SLIDE_FRAME_DELAY
+            int "Delay between slide animation frames (in ms)"
+            default 20
+    endmenu
 endmenu
