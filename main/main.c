@@ -156,13 +156,12 @@ void app_main(void)
       ret = nvs_flash_init();
     }
     ESP_ERROR_CHECK(ret);
-    if (strcmp(CONFIG_HC_WIFI_SSID, "") != 0)
-        init_wifi_sta();
-    else
-        ESP_LOGW(TAG, "SSID is empty, skipping Wi-Fi init");
 
-    // Init SNTP for time synchronization
-    init_sntp();
+    if (strcmp(CONFIG_HC_WIFI_SSID, "") != 0) {
+        init_sntp();
+        init_wifi_sta();
+    } else
+        ESP_LOGW(TAG, "SSID is empty, skipping Wi-Fi init");
 
     // Init LEDs and framebuffer
     configure_led();
