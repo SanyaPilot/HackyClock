@@ -6,10 +6,19 @@
 
 static uint16_t matrix_led_index(uint8_t x, uint8_t y)
 {
-    // First LED is in the top-right corner
-    // In serpetine matrix pixels are laid out back-and-forth
-    uint8_t rowX = (y & CONFIG_HC_MATRIX_SERPENTINE_DIR_INVERSED) ? x : (CONFIG_HC_MATRIX_WIDTH - x - 1);
-    return y * CONFIG_HC_MATRIX_HEIGHT + rowX;
+#ifdef CONFIG_HC_MATRIX_TYPE_SERPENTINE
+#ifdef CONFIG_HC_MATRIX_SERPENTINE_DIR_NORMAL
+    // Serpentine, first LED is in the top-left corner
+    uint8_t row_x = (y & 1) ? (CONFIG_HC_MATRIX_WIDTH - x - 1) : x;
+#else
+    // Serpentine, first LED is in the top-right corner (inversed)
+    uint8_t row_x = (y & 1) ? x : (CONFIG_HC_MATRIX_WIDTH - x - 1);
+#endif /* CONFIG_HC_MATRIX_SERPENTINE_DIR_NORMAL */
+    return y * CONFIG_HC_MATRIX_HEIGHT + row_x;
+#else
+    // Parallel, left-to-right layout
+    return y * CONFIG_HC_MATRIX_HEIGHT + x;
+#endif /* CONFIG_HC_MATRIX_TYPE_SERPENTINE */
 }
 
 static crgb crgb_mult(crgb a, float mult)
