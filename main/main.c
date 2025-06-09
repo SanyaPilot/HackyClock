@@ -5,6 +5,7 @@
 #include "esp_wifi.h"
 #include "esp_event.h"
 #include "esp_netif_sntp.h"
+#include "esp_vfs_fat.h"
 #include "nvs_flash.h"
 #include "driver/pulse_cnt.h"
 #include "led_strip.h"
@@ -52,7 +53,13 @@
 
 static const char *TAG = "main";
 
+const char *base_path = "/spiflash";
+static wl_handle_t wl_handle = WL_INVALID_HANDLE;
+
 static led_strip_handle_t led_strip;
+
+static int wifi_retry_num = 0;
+bool wifi_is_connected = false;
 
 static void configure_led(void)
 {
@@ -78,8 +85,23 @@ static void configure_led(void)
     led_strip_clear(led_strip);
 }
 
-static int s_retry_num = 0;
-bool wifi_is_connected = false;
+static void configure_storage(void)
+{
+    const esp_vfs_fat_mount_config_t mount_config = {
+        .max_files = 4,
+        .format_if_mount_failed = true,
+        .allocation_unit_size = CONFIG_WL_SECTOR_SIZE,
+        .use_one_fat = false
+    };
+
+    // Mount FATFS filesystem located on "storage" partition in read-write mode
+    esp_err_t err = esp_vfs_fat_spiflash_mount_rw_wl(base_path, "storage", &mount_config, &wl_handle);
+    if (err != ESP_OK) {
+        ESP_LOGE(TAG, "Failed to mount FATFS (%s)", esp_err_to_name(err));
+        return;
+    }
+}
+
 static void wifi_event_handler(void* arg, esp_event_base_t event_base,
                                int32_t event_id, void* event_data)
 {
@@ -87,16 +109,16 @@ static void wifi_event_handler(void* arg, esp_event_base_t event_base,
         esp_wifi_connect();
     } else if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_DISCONNECTED) {
         wifi_is_connected = false;
-        if (s_retry_num < CONFIG_HC_WIFI_MAX_RETRY) {
+        if (wifi_retry_num < CONFIG_HC_WIFI_MAX_RETRY) {
             esp_wifi_connect();
-            s_retry_num++;
+            wifi_retry_num++;
             ESP_LOGI(TAG, "retry to connect to the AP");
         }
         ESP_LOGW(TAG,"connect to the AP fail");
     } else if (event_base == IP_EVENT && event_id == IP_EVENT_STA_GOT_IP) {
         ip_event_got_ip_t* event = (ip_event_got_ip_t*) event_data;
         ESP_LOGI(TAG, "got ip:" IPSTR, IP2STR(&event->ip_info.ip));
-        s_retry_num = 0;
+        wifi_retry_num = 0;
         wifi_is_connected = true;
     }
 }
@@ -204,6 +226,9 @@ static void init_encoder_pcnt(void)
 
 void app_main(void)
 {
+    // Storage
+    configure_storage();
+
     // Init NVS and Wi-Fi
     esp_err_t ret = nvs_flash_init();
     if (ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND) {
