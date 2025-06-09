@@ -1,8 +1,10 @@
 #include <string.h>
+#include <time.h>
 #include "freertos/FreeRTOS.h"
 #include "esp_log.h"
 #include "esp_wifi.h"
 #include "esp_event.h"
+#include "esp_netif_sntp.h"
 #include "nvs_flash.h"
 #include "led_strip.h"
 #include "sdkconfig.h"
@@ -136,12 +138,17 @@ void init_wifi_sta(void)
     ESP_ERROR_CHECK(esp_wifi_start());
 }
 
+static void init_sntp(void)
+{
+    // Set time zone
+    setenv("TZ", CONFIG_HC_TIME_ZONE, 1);
+    tzset();
+    esp_sntp_config_t config = ESP_NETIF_SNTP_DEFAULT_CONFIG(CONFIG_HC_NTP_SERVER);
+    esp_netif_sntp_init(&config);
+}
+
 void app_main(void)
 {
-    // Init LEDs and framebuffer
-    configure_led();
-    struct framebuffer *fb = fb_init(led_strip, CONFIG_HC_FB_BRIGHTNESS);
-
     // Init NVS and Wi-Fi
     esp_err_t ret = nvs_flash_init();
     if (ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND) {
@@ -153,6 +160,13 @@ void app_main(void)
         init_wifi_sta();
     else
         ESP_LOGW(TAG, "SSID is empty, skipping Wi-Fi init");
+
+    // Init SNTP for time synchronization
+    init_sntp();
+
+    // Init LEDs and framebuffer
+    configure_led();
+    struct framebuffer *fb = fb_init(led_strip, CONFIG_HC_FB_BRIGHTNESS);
 
     // Draw some lines
     ESP_LOGI(TAG, "Drawing square");

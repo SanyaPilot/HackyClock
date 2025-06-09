@@ -116,4 +116,21 @@ menu "HackyClock configuration"
                 bool "WAPI PSK"
         endchoice
     endmenu
+
+    menu "Time and date"
+        config HC_NTP_SERVER
+            string "NTP server"
+            default "pool.ntp.org"
+            help
+                Specifies a time server, which will be used for time synchronization
+
+        config HC_TIME_ZONE
+            string "Time zone"
+            default "UTC"
+            help
+                Value of POSIX TZ environment variable, see
+                https://www.gnu.org/software/libc/manual/html_node/TZ-Variable.html
+
+                tldr: offset is inversed, e.g. UTC+3 (MSK) will be UTC-3
+    endmenu
 endmenu
