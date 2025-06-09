@@ -65,6 +65,15 @@ menu "HackyClock configuration"
                 Defines the maximum brightness of LEDs, in range 0-255
     endmenu
 
+    menu "Controls"
+        config HC_ENCODER_PIN_A
+            int "Encoder pin A GPIO"
+            default 18
+        config HC_ENCODER_PIN_B
+            int "Encoder pin B GPIO"
+            default 19
+    endmenu
+
     menu "App manager"
         config HC_AM_MAX_APPS
             int "Maximum number of apps"

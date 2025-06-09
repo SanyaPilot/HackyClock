@@ -6,6 +6,7 @@
 #include "esp_event.h"
 #include "esp_netif_sntp.h"
 #include "nvs_flash.h"
+#include "driver/pulse_cnt.h"
 #include "led_strip.h"
 #include "sdkconfig.h"
 
@@ -147,6 +148,60 @@ static void init_sntp(void)
     esp_netif_sntp_init(&config);
 }
 
+// Encoder via PCNT peripheral
+static bool pcnt_interrupt_handler(pcnt_unit_handle_t unit, const pcnt_watch_event_data_t *edata, void *user_ctx)
+{
+    BaseType_t high_task_wakeup = pdFALSE;
+    // Send an event to WM!
+    am_send_msg_from_isr((edata->watch_point_value > 0) ? AM_MSG_NEXTAPP : AM_MSG_PREVAPP, &high_task_wakeup);
+    return (high_task_wakeup == pdTRUE);
+}
+
+static void init_encoder_pcnt(void)
+{
+    pcnt_unit_config_t unit_config = {
+        .high_limit = 4,
+        .low_limit = -4,
+    };
+    pcnt_unit_handle_t pcnt_unit = NULL;
+    ESP_ERROR_CHECK(pcnt_new_unit(&unit_config, &pcnt_unit));
+
+    pcnt_glitch_filter_config_t filter_config = {
+        .max_glitch_ns = 1000,
+    };
+    ESP_ERROR_CHECK(pcnt_unit_set_glitch_filter(pcnt_unit, &filter_config));
+
+    pcnt_chan_config_t chan_a_config = {
+        .edge_gpio_num = CONFIG_HC_ENCODER_PIN_A,
+        .level_gpio_num = CONFIG_HC_ENCODER_PIN_B,
+    };
+    pcnt_channel_handle_t pcnt_chan_a = NULL;
+    ESP_ERROR_CHECK(pcnt_new_channel(pcnt_unit, &chan_a_config, &pcnt_chan_a));
+    pcnt_chan_config_t chan_b_config = {
+        .edge_gpio_num = CONFIG_HC_ENCODER_PIN_B,
+        .level_gpio_num = CONFIG_HC_ENCODER_PIN_A,
+    };
+    pcnt_channel_handle_t pcnt_chan_b = NULL;
+    ESP_ERROR_CHECK(pcnt_new_channel(pcnt_unit, &chan_b_config, &pcnt_chan_b));
+
+    ESP_ERROR_CHECK(pcnt_channel_set_edge_action(pcnt_chan_a, PCNT_CHANNEL_EDGE_ACTION_DECREASE, PCNT_CHANNEL_EDGE_ACTION_INCREASE));
+    ESP_ERROR_CHECK(pcnt_channel_set_level_action(pcnt_chan_a, PCNT_CHANNEL_LEVEL_ACTION_KEEP, PCNT_CHANNEL_LEVEL_ACTION_INVERSE));
+    ESP_ERROR_CHECK(pcnt_channel_set_edge_action(pcnt_chan_b, PCNT_CHANNEL_EDGE_ACTION_INCREASE, PCNT_CHANNEL_EDGE_ACTION_DECREASE));
+    ESP_ERROR_CHECK(pcnt_channel_set_level_action(pcnt_chan_b, PCNT_CHANNEL_LEVEL_ACTION_KEEP, PCNT_CHANNEL_LEVEL_ACTION_INVERSE));
+
+    int watch_points[] = {-4, 4};
+    for (size_t i = 0; i < sizeof(watch_points) / sizeof(watch_points[0]); i++) {
+        ESP_ERROR_CHECK(pcnt_unit_add_watch_point(pcnt_unit, watch_points[i]));
+    }
+    pcnt_event_callbacks_t cbs = {
+        .on_reach = pcnt_interrupt_handler,
+    };
+    ESP_ERROR_CHECK(pcnt_unit_register_event_callbacks(pcnt_unit, &cbs, NULL));
+    ESP_ERROR_CHECK(pcnt_unit_enable(pcnt_unit));
+    ESP_ERROR_CHECK(pcnt_unit_clear_count(pcnt_unit));
+    ESP_ERROR_CHECK(pcnt_unit_start(pcnt_unit));
+}
+
 void app_main(void)
 {
     // Init NVS and Wi-Fi
@@ -189,4 +244,7 @@ void app_main(void)
     am_params->framebuffer = fb;
     am_params->apps = registered_apps;
     launch_am_task(am_params);
+
+    // Setup PCNT to catch encoder events
+    init_encoder_pcnt();
 }
