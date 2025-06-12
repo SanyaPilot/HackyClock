@@ -3,9 +3,6 @@
 
 #include <stdint.h>
 
-#define FONT_HEIGHT 5
-#define FONT_WIDTH  3
-
 struct bitmap_font
 {
     uint8_t width;
@@ -14,4 +11,5 @@ struct bitmap_font
 };
 
 extern const struct bitmap_font digits_3x5_font;
+extern const struct bitmap_font digits_7x7_font;
 #endif
