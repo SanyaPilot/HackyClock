@@ -4,6 +4,7 @@ idf_component_register(SRCS "main.c"
                             "app_manager.c"
                             "fonts.c"
                             "image_utils.c"
+                            "animations.c"
                     INCLUDE_DIRS "." "include" "../external/qoi")
 
 set(image ../fatfs_image)

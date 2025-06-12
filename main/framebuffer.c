@@ -21,7 +21,7 @@ static uint16_t matrix_led_index(uint8_t x, uint8_t y)
 #endif /* CONFIG_HC_MATRIX_TYPE_SERPENTINE */
 }
 
-static crgb crgb_mult(crgb a, float mult)
+crgb crgb_mult(crgb a, float mult)
 {
     crgb res = { .r = a.r * mult, .g = a.g * mult, .b = a.b * mult };
     return res;

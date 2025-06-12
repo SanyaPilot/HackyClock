@@ -24,4 +24,6 @@ void fb_blank(struct framebuffer *fb);
 void fb_fill(struct framebuffer *fb, crgb color);
 void fb_refresh(struct framebuffer *fb);
 
+crgb crgb_mult(crgb a, float mult);
+
 #endif

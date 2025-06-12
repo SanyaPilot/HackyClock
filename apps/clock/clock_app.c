@@ -4,7 +4,11 @@
 #include "canvas.h"
 #include "app_manager.h"
 #include "framebuffer.h"
+#include "animations.h"
 #include "fonts.h"
+
+#define FADE_ANIM_DURATION  300
+#define FADE_ANIM_DELAY     20
 
 enum clock_style {
     STYLE_SMALL = 0,
@@ -88,8 +92,10 @@ void clock_ui_task(void *param)
         if (message == EVENT_BTN_CLICK) {
             // Switch clock style
             style = !style;
-            cv_blank(cv);
-            draw_clock(cv, &timeinfo, style, color);
+            anim_fade_out(cv, FADE_ANIM_DURATION, FADE_ANIM_DELAY);
+            struct canvas *temp_cv = cv_copy(cv);
+            draw_clock(temp_cv, &timeinfo, style, color);
+            anim_fade_in(cv, temp_cv, FADE_ANIM_DURATION, FADE_ANIM_DELAY);
         }
     }
 }
