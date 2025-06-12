@@ -69,9 +69,14 @@ menu "HackyClock configuration"
         config HC_ENCODER_PIN_A
             int "Encoder pin A GPIO"
             default 18
+
         config HC_ENCODER_PIN_B
             int "Encoder pin B GPIO"
             default 19
+
+        config HC_BUTTON_GPIO
+            int "Button GPIO"
+            default 21
     endmenu
 
     menu "App manager"

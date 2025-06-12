@@ -6,12 +6,15 @@
 #include "esp_event.h"
 #include "esp_netif_sntp.h"
 #include "esp_vfs_fat.h"
+#include "iot_button.h"
 #include "nvs_flash.h"
 #include "driver/pulse_cnt.h"
 #include "led_strip.h"
+#include "button_gpio.h"
 #include "sdkconfig.h"
 
 #include "framebuffer.h"
+#include "app_manager.h"
 #include "apps.h"
 
 // LED strip definitions
@@ -55,8 +58,8 @@ static const char *TAG = "main";
 
 const char *base_path = "/spiflash";
 static wl_handle_t wl_handle = WL_INVALID_HANDLE;
-
 static led_strip_handle_t led_strip;
+static button_handle_t gpio_btn = NULL;
 
 static int wifi_retry_num = 0;
 bool wifi_is_connected = false;
@@ -174,8 +177,11 @@ static void init_sntp(void)
 static bool pcnt_interrupt_handler(pcnt_unit_handle_t unit, const pcnt_watch_event_data_t *edata, void *user_ctx)
 {
     BaseType_t high_task_wakeup = pdFALSE;
-    // Send an event to WM!
-    am_send_msg_from_isr((edata->watch_point_value > 0) ? AM_MSG_NEXTAPP : AM_MSG_PREVAPP, &high_task_wakeup);
+    // If the button is pressed, send input event to the app, otherwise switch apps
+    if (iot_button_get_key_level(gpio_btn))
+        am_send_input_event((edata->watch_point_value > 0) ? EVENT_KNOB_RIGHT : EVENT_KNOB_LEFT, &high_task_wakeup);
+    else
+        am_send_msg_from_isr((edata->watch_point_value > 0) ? AM_MSG_NEXTAPP : AM_MSG_PREVAPP, &high_task_wakeup);
     return (high_task_wakeup == pdTRUE);
 }
 
@@ -224,6 +230,26 @@ static void init_encoder_pcnt(void)
     ESP_ERROR_CHECK(pcnt_unit_start(pcnt_unit));
 }
 
+static void button_click_callback(void *handle, void *usr_data)
+{
+    // IDK if this works... Maybe I should rewrite button code by my own?
+    am_send_input_event(EVENT_BTN_CLICK, NULL);
+}
+
+static void init_button(void)
+{
+    const button_config_t btn_cfg = {0};
+    const button_gpio_config_t btn_gpio_cfg = {
+        .gpio_num = CONFIG_HC_BUTTON_GPIO,
+        .active_level = 0,
+    };
+    iot_button_new_gpio_device(&btn_cfg, &btn_gpio_cfg, &gpio_btn);
+    if (gpio_btn == NULL)
+        ESP_LOGE(TAG, "Button create failed");
+
+    iot_button_register_cb(gpio_btn, BUTTON_SINGLE_CLICK, NULL, button_click_callback, NULL);
+}
+
 void app_main(void)
 {
     // Storage
@@ -270,6 +296,7 @@ void app_main(void)
     am_params->apps = registered_apps;
     launch_am_task(am_params);
 
-    // Setup PCNT to catch encoder events
+    // Setup PCNT to catch encoder events and button driver
+    init_button();
     init_encoder_pcnt();
 }

@@ -19,6 +19,8 @@ struct am_window_data
 };
 
 static TaskHandle_t am_handle = NULL;
+static struct am_window_data win_data[CONFIG_HC_AM_MAX_APPS];
+static uint8_t win_idx = 0;
 
 static void redraw_fb(struct framebuffer *fb, struct canvas *cv)
 {
@@ -74,7 +76,6 @@ static void window_manager_task(void *param)
 
     // Allocate memory for canvases
     ESP_LOGI(TAG, "Available windows:");
-    struct am_window_data win_data[CONFIG_HC_AM_MAX_APPS];
     uint8_t win_count = 0;
     for (uint8_t i = 0; (void *)(app_info[i].name) != NULL; i++) {
         struct canvas *new_cv = pvPortMalloc(sizeof(struct canvas));
@@ -93,7 +94,6 @@ static void window_manager_task(void *param)
     }
 
     // Start first window task
-    uint8_t win_idx = 0;
     launch_window_task(app_info[win_idx], &win_data[win_idx]);
 
     while(1) {
@@ -169,4 +169,9 @@ void am_send_msg(uint32_t message)
 void am_send_msg_from_isr(uint32_t message, BaseType_t *higher_task_wakeup)
 {
     xTaskNotifyFromISR(am_handle, message, eSetBits, higher_task_wakeup);
+}
+
+void am_send_input_event(uint32_t event, BaseType_t *higher_task_wakeup)
+{
+    xTaskNotifyFromISR(win_data[win_idx].handle, event, eSetBits, higher_task_wakeup);
 }

@@ -8,6 +8,11 @@
 #define AM_MSG_PREVAPP  0x2
 #define AM_MSG_NEXTAPP  0x4
 
+// Input events
+#define EVENT_BTN_CLICK     0x1
+#define EVENT_KNOB_RIGHT    0x2
+#define EVENT_KNOB_LEFT     0x4
+
 struct am_app_info
 {
     const char *name;
@@ -23,4 +28,5 @@ struct am_params
 void launch_am_task(struct am_params *params);
 void am_send_msg(uint32_t message);
 void am_send_msg_from_isr(uint32_t message, BaseType_t *higher_task_wakeup);
+void am_send_input_event(uint32_t event, BaseType_t *higher_task_wakeup);
 #endif
