@@ -12,6 +12,8 @@ struct canvas {
     crgb *buf;
 };
 
+struct canvas *cv_init(uint8_t width, uint8_t height);
+struct canvas *cv_copy(struct canvas *old_cv);
 void cv_blank(struct canvas *cv);
 void cv_fill(struct canvas *cv, crgb color);
 void cv_set_pixel(struct canvas *cv, uint8_t x, uint8_t y, crgb color);

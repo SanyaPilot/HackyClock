@@ -1,8 +1,30 @@
 #include <stdint.h>
 #include <string.h>
+#include "freertos/FreeRTOS.h"
 #include "canvas.h"
 
 static const crgb crgb_black = { 0, 0, 0 };
+
+struct canvas *cv_init(uint8_t width, uint8_t height)
+{
+    struct canvas *new_cv = pvPortMalloc(sizeof(struct canvas));
+    new_cv->width = width;
+    new_cv->height = height;
+    new_cv->buf = pvPortMalloc(sizeof(crgb) * width * height);
+    cv_blank(new_cv);
+    return new_cv;
+}
+
+struct canvas *cv_copy(struct canvas *old_cv)
+{
+    struct canvas *new_cv = pvPortMalloc(sizeof(struct canvas));
+    new_cv->width = old_cv->width;
+    new_cv->height = old_cv->height;
+    size_t buf_size = sizeof(crgb) * old_cv->width * old_cv->height;
+    new_cv->buf = pvPortMalloc(buf_size);
+    memcpy(new_cv->buf, old_cv->buf, buf_size);
+    return new_cv;
+}
 
 void cv_blank(struct canvas *cv)
 {

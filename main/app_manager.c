@@ -78,15 +78,9 @@ static void window_manager_task(void *param)
     ESP_LOGI(TAG, "Available windows:");
     uint8_t win_count = 0;
     for (uint8_t i = 0; (void *)(app_info[i].name) != NULL; i++) {
-        struct canvas *new_cv = pvPortMalloc(sizeof(struct canvas));
-        new_cv->width = CONFIG_HC_MATRIX_WIDTH;
-        new_cv->height = CONFIG_HC_MATRIX_HEIGHT;
-        new_cv->buf = pvPortMalloc(sizeof(crgb) * CONFIG_HC_MATRIX_WIDTH * CONFIG_HC_MATRIX_HEIGHT);
-        cv_blank(new_cv);
-
         struct am_window_data new_win = {
             .handle = NULL,
-            .canvas = new_cv
+            .canvas = cv_init(CONFIG_HC_MATRIX_WIDTH, CONFIG_HC_MATRIX_HEIGHT)
         };
         win_data[i] = new_win;
         win_count++;
