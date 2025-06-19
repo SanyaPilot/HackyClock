@@ -8,9 +8,10 @@
 
 #define TAG "app_manager"
 
-#define AM_STACK_SIZE      (configMINIMAL_STACK_SIZE * 2)
-#define AM_TASK_PRIORITY   (tskIDLE_PRIORITY + 2)
-#define AM_WIN_PRIORITY    (tskIDLE_PRIORITY + 1)
+#define AM_STACK_SIZE       (3 * 1024)
+#define APP_STACK_SIZE      (8 * 1024)
+#define AM_TASK_PRIORITY    (tskIDLE_PRIORITY + 2)
+#define AM_WIN_PRIORITY     (tskIDLE_PRIORITY + 1)
 
 struct am_window_data
 {
@@ -61,7 +62,7 @@ static int launch_window_task(struct am_app_info info, struct am_window_data *da
     return xTaskCreate(
         info.ui_task,
         info.name,
-        configMINIMAL_STACK_SIZE * 2,
+        APP_STACK_SIZE,
         data->canvas,
         AM_WIN_PRIORITY,
         &data->handle
