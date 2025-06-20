@@ -1,9 +1,11 @@
 #include <stdint.h>
 #include <string.h>
 #include "freertos/FreeRTOS.h"
+#include "esp_log.h"
 #include "canvas.h"
 
 static const crgb crgb_black = { 0, 0, 0 };
+static const char *TAG = "canvas";
 
 struct canvas *cv_init(uint8_t width, uint8_t height)
 {
@@ -35,6 +37,11 @@ void cv_fill(struct canvas *cv, crgb color)
 {
     for (uint8_t i = 0; i < cv->width * cv->height; i++)
         cv->buf[i] = color;
+}
+
+crgb cv_get_pixel(struct canvas *cv, uint8_t x, uint8_t y)
+{
+    return cv->buf[y * cv->width + x];
 }
 
 void cv_set_pixel(struct canvas *cv, uint8_t x, uint8_t y, crgb color)
@@ -77,6 +84,10 @@ void cv_draw_symbol(struct canvas *cv, const struct bitmap_font *font, uint8_t s
 // Draws image (raw RGB888 or RGBA8888 pixels)
 void cv_draw_image(struct canvas *cv, struct image_desc *img, uint8_t x, uint8_t y)
 {
+    if (img->channels != 3 && img->channels != 4) {
+        ESP_LOGE(TAG, "Channel count must be 3 (RGB) or 4 (RGBA)");
+        return;
+    }
     // Convert raw bytes into crgb (ignore alpha for now), and fill canvas
     for (uint8_t i = 0; i < (cv->height < img->height ? cv->height : img->height); i++) {
         if (y + i >= cv->height)
@@ -86,8 +97,18 @@ void cv_draw_image(struct canvas *cv, struct image_desc *img, uint8_t x, uint8_t
                 break;
             size_t pos = (i * img->width + j) * img->channels;
             uint8_t *pixels = img->pixels;
-            crgb pixel = { pixels[pos], pixels[pos + 1], pixels[pos + 2] };
-            cv_set_pixel(cv, x + j, y + i, pixel);
+            crgb final;
+            if (img->channels == 3) {
+                final.r = pixels[pos]; final.g = pixels[pos + 1]; final.b = pixels[pos + 2];
+            } else {
+                // Blend alpha (assume that alpha of canvas pixels is 1.0)
+                crgb cv_px = cv_get_pixel(cv, x + j, y + i);
+                float alpha = pixels[pos + 3] / 255.f;
+                final.r = pixels[pos] * alpha + cv_px.r * (1 - alpha);
+                final.g = pixels[pos + 1] * alpha + cv_px.g * (1 - alpha);
+                final.b = pixels[pos + 2] * alpha + cv_px.b * (1 - alpha);
+            }
+            cv_set_pixel(cv, x + j, y + i, final);
         }
     }
 }
