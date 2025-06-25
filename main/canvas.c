@@ -28,6 +28,12 @@ struct canvas *cv_copy(struct canvas *old_cv)
     return new_cv;
 }
 
+void cv_free(struct canvas *cv)
+{
+    free(cv->buf);
+    free(cv);
+}
+
 void cv_blank(struct canvas *cv)
 {
     memset(cv->buf, 0, cv->width * cv->height * sizeof(crgb));
