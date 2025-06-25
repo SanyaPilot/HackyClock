@@ -1,0 +1,17 @@
+menu "Weather app configuration"
+    config WEATHER_LAT
+        string "Latitude"
+        default "55.7522"
+    
+    config WEATHER_LON
+        string "Longtitude"
+        default "37.6156"
+    
+    config WEATHER_FETCH_DELAY
+        int "API fetch delay (seconds)"
+        default 120
+    
+    config WEATHER_FETCH_RETRY_DELAY
+        int "API fetch retry delay (seconds)"
+        default 10
+endmenu
