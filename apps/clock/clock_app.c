@@ -96,6 +96,7 @@ void clock_ui_task(void *param)
             struct canvas *temp_cv = cv_copy(cv);
             draw_clock(temp_cv, &timeinfo, style, color);
             anim_fade_in(cv, temp_cv, FADE_ANIM_DURATION, FADE_ANIM_DELAY);
+            cv_free(temp_cv);
         }
     }
 }
