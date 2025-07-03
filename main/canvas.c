@@ -41,7 +41,7 @@ void cv_blank(struct canvas *cv)
 
 void cv_fill(struct canvas *cv, crgb color)
 {
-    for (uint8_t i = 0; i < cv->width * cv->height; i++)
+    for (size_t i = 0; i < cv->width * cv->height; i++)
         cv->buf[i] = color;
 }
 
