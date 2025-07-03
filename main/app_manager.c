@@ -10,8 +10,8 @@
 
 #define AM_STACK_SIZE       (3 * 1024)
 #define APP_STACK_SIZE      (8 * 1024)
-#define AM_TASK_PRIORITY    (tskIDLE_PRIORITY + 2)
-#define AM_WIN_PRIORITY     (tskIDLE_PRIORITY + 1)
+#define AM_TASK_PRIORITY    (tskIDLE_PRIORITY + 3)
+#define AM_WIN_PRIORITY     (tskIDLE_PRIORITY + 2)
 
 struct am_window_data
 {
