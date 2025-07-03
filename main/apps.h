@@ -10,10 +10,12 @@
 #include "clock_app.h"
 #include "wifi_status_app.h"
 #include "weather_app.h"
+#include "ha_mqtt_light.h"
 
 static struct am_app_info registered_apps[] = {
     APP_INFO(wifi_status),
     APP_INFO(clock),
+    APP_INFO(ha_mqtt_light),
     APP_INFO(weather),
     APP_INFO(sin_wave),
     { /* sentinel */}

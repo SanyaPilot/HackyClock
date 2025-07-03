@@ -1,0 +1,41 @@
+menu "Home Assistant MQTT Light configuration"
+    config HA_LIGHT_MQTT_BROKER_URL
+        string "MQTT broker URL"
+        default "mqtt://192.168.1.3"
+
+    config HA_LIGHT_DISCOVERY_PREFIX
+        string "Home Assistant discovery topic prefix"
+        default "homeassistant"
+        help
+            Discovery topic prefix, must match one in the HA settings
+
+    config HA_LIGHT_DEVICE_NAME
+        string "Device name"
+        default "HackyClock"
+        help
+            Device name, displayed inside the HA settings
+
+    config HA_LIGHT_OBJECT_NAME
+        string "Light object name"
+        default "Screen"
+        help
+            Object name in Home Assistant
+
+    config HA_LIGHT_ORIGIN_NAME
+        string "Origin name"
+        default "HackyClock"
+        help
+            Origin of MQTT device, somehow a mandatory, just an internal thing
+
+    config HA_LIGHT_DEVICE_MANUFACTURER
+        string "Device manufacturer"
+        default ""
+        help
+            Manufacturer of device, displayed inside the HA settings
+
+    config HA_LIGHT_BRIGHTNESS_STEP
+        int "Brightness step"
+        default 17
+        help
+            Brightness increase / decrease step for knob rotation
+endmenu
