@@ -1,4 +1,5 @@
 idf_component_register(SRCS "main.c"
+                            "input.c"
                             "framebuffer.c"
                             "canvas.c"
                             "app_manager.c"

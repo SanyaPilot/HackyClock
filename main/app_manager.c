@@ -166,7 +166,7 @@ void am_send_msg_from_isr(uint32_t message, BaseType_t *higher_task_wakeup)
     xTaskNotifyFromISR(am_handle, message, eSetBits, higher_task_wakeup);
 }
 
-void am_send_input_event(uint32_t event, BaseType_t *higher_task_wakeup)
+void am_send_input_event(uint32_t event)
 {
-    xTaskNotifyFromISR(win_data[win_idx].handle, event, eSetBits, higher_task_wakeup);
+    xTaskNotify(win_data[win_idx].handle, event, eSetBits);
 }

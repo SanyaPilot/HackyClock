@@ -6,13 +6,11 @@
 #include "esp_event.h"
 #include "esp_netif_sntp.h"
 #include "esp_vfs_fat.h"
-#include "iot_button.h"
 #include "nvs_flash.h"
-#include "driver/pulse_cnt.h"
 #include "led_strip.h"
-#include "button_gpio.h"
 #include "sdkconfig.h"
 
+#include "input.h"
 #include "framebuffer.h"
 #include "app_manager.h"
 #include "apps.h"
@@ -59,7 +57,6 @@ static const char *TAG = "main";
 const char *base_path = "/spiflash";
 static wl_handle_t wl_handle = WL_INVALID_HANDLE;
 static led_strip_handle_t led_strip;
-static button_handle_t gpio_btn = NULL;
 
 static int wifi_retry_num = 0;
 bool wifi_is_connected = false;
@@ -173,83 +170,6 @@ static void init_sntp(void)
     esp_netif_sntp_init(&config);
 }
 
-// Encoder via PCNT peripheral
-static bool pcnt_interrupt_handler(pcnt_unit_handle_t unit, const pcnt_watch_event_data_t *edata, void *user_ctx)
-{
-    BaseType_t high_task_wakeup = pdFALSE;
-    // If the button is pressed, send input event to the app, otherwise switch apps
-    if (iot_button_get_key_level(gpio_btn))
-        am_send_input_event((edata->watch_point_value > 0) ? EVENT_KNOB_RIGHT : EVENT_KNOB_LEFT, &high_task_wakeup);
-    else
-        am_send_msg_from_isr((edata->watch_point_value > 0) ? AM_MSG_NEXTAPP : AM_MSG_PREVAPP, &high_task_wakeup);
-    return (high_task_wakeup == pdTRUE);
-}
-
-static void init_encoder_pcnt(void)
-{
-    pcnt_unit_config_t unit_config = {
-        .high_limit = 4,
-        .low_limit = -4,
-    };
-    pcnt_unit_handle_t pcnt_unit = NULL;
-    ESP_ERROR_CHECK(pcnt_new_unit(&unit_config, &pcnt_unit));
-
-    pcnt_glitch_filter_config_t filter_config = {
-        .max_glitch_ns = 1000,
-    };
-    ESP_ERROR_CHECK(pcnt_unit_set_glitch_filter(pcnt_unit, &filter_config));
-
-    pcnt_chan_config_t chan_a_config = {
-        .edge_gpio_num = CONFIG_HC_ENCODER_PIN_A,
-        .level_gpio_num = CONFIG_HC_ENCODER_PIN_B,
-    };
-    pcnt_channel_handle_t pcnt_chan_a = NULL;
-    ESP_ERROR_CHECK(pcnt_new_channel(pcnt_unit, &chan_a_config, &pcnt_chan_a));
-    pcnt_chan_config_t chan_b_config = {
-        .edge_gpio_num = CONFIG_HC_ENCODER_PIN_B,
-        .level_gpio_num = CONFIG_HC_ENCODER_PIN_A,
-    };
-    pcnt_channel_handle_t pcnt_chan_b = NULL;
-    ESP_ERROR_CHECK(pcnt_new_channel(pcnt_unit, &chan_b_config, &pcnt_chan_b));
-
-    ESP_ERROR_CHECK(pcnt_channel_set_edge_action(pcnt_chan_a, PCNT_CHANNEL_EDGE_ACTION_DECREASE, PCNT_CHANNEL_EDGE_ACTION_INCREASE));
-    ESP_ERROR_CHECK(pcnt_channel_set_level_action(pcnt_chan_a, PCNT_CHANNEL_LEVEL_ACTION_KEEP, PCNT_CHANNEL_LEVEL_ACTION_INVERSE));
-    ESP_ERROR_CHECK(pcnt_channel_set_edge_action(pcnt_chan_b, PCNT_CHANNEL_EDGE_ACTION_INCREASE, PCNT_CHANNEL_EDGE_ACTION_DECREASE));
-    ESP_ERROR_CHECK(pcnt_channel_set_level_action(pcnt_chan_b, PCNT_CHANNEL_LEVEL_ACTION_KEEP, PCNT_CHANNEL_LEVEL_ACTION_INVERSE));
-
-    int watch_points[] = {-4, 4};
-    for (size_t i = 0; i < sizeof(watch_points) / sizeof(watch_points[0]); i++) {
-        ESP_ERROR_CHECK(pcnt_unit_add_watch_point(pcnt_unit, watch_points[i]));
-    }
-    pcnt_event_callbacks_t cbs = {
-        .on_reach = pcnt_interrupt_handler,
-    };
-    ESP_ERROR_CHECK(pcnt_unit_register_event_callbacks(pcnt_unit, &cbs, NULL));
-    ESP_ERROR_CHECK(pcnt_unit_enable(pcnt_unit));
-    ESP_ERROR_CHECK(pcnt_unit_clear_count(pcnt_unit));
-    ESP_ERROR_CHECK(pcnt_unit_start(pcnt_unit));
-}
-
-static void button_click_callback(void *handle, void *usr_data)
-{
-    // IDK if this works... Maybe I should rewrite button code by my own?
-    am_send_input_event(EVENT_BTN_CLICK, NULL);
-}
-
-static void init_button(void)
-{
-    const button_config_t btn_cfg = {0};
-    const button_gpio_config_t btn_gpio_cfg = {
-        .gpio_num = CONFIG_HC_BUTTON_GPIO,
-        .active_level = 0,
-    };
-    iot_button_new_gpio_device(&btn_cfg, &btn_gpio_cfg, &gpio_btn);
-    if (gpio_btn == NULL)
-        ESP_LOGE(TAG, "Button create failed");
-
-    iot_button_register_cb(gpio_btn, BUTTON_SINGLE_CLICK, NULL, button_click_callback, NULL);
-}
-
 void app_main(void)
 {
     // Storage
@@ -296,7 +216,6 @@ void app_main(void)
     am_params->apps = registered_apps;
     launch_am_task(am_params);
 
-    // Setup PCNT to catch encoder events and button driver
-    init_button();
-    init_encoder_pcnt();
+    // Init GPIO buttons input handler
+    init_gpio_buttons();
 }
