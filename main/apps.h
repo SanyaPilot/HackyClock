@@ -21,4 +21,6 @@ static struct am_app_info registered_apps[] = {
     { /* sentinel */}
 };
 
+static const char *default_app = "clock";
+
 #endif

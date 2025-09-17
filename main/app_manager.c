@@ -86,6 +86,8 @@ static void window_manager_task(void *param)
         win_data[i] = new_win;
         win_count++;
         ESP_LOGI(TAG, "    %s", app_info[i].name);
+        if (app_info[i].name == params->default_app)
+            win_idx = i;
     }
 
     // Start first window task

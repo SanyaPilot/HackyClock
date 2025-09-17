@@ -214,6 +214,7 @@ void app_main(void)
     struct am_params *am_params = pvPortMalloc(sizeof(struct am_params));
     am_params->framebuffer = fb;
     am_params->apps = registered_apps;
+    am_params->default_app = default_app;
     launch_am_task(am_params);
 
     // Init GPIO buttons input handler

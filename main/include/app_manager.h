@@ -23,6 +23,7 @@ struct am_params
 {
     struct framebuffer *framebuffer;
     struct am_app_info *apps;
+    const char *default_app;
 };
 
 void launch_am_task(struct am_params *params);
