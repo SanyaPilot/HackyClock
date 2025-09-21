@@ -1,8 +1,10 @@
 #include <stdint.h>
 #include <string.h>
+#include <sys/param.h>
 #include "freertos/FreeRTOS.h"
 #include "esp_log.h"
 #include "canvas.h"
+#include "framebuffer.h"
 
 static const crgb crgb_black = { 0, 0, 0 };
 static const char *TAG = "canvas";
@@ -117,4 +119,21 @@ void cv_draw_image(struct canvas *cv, struct image_desc *img, uint8_t x, uint8_t
             cv_set_pixel(cv, x + j, y + i, final);
         }
     }
+}
+
+// Copy contents of cv_child into cv
+void cv_draw_cv(struct canvas *cv, struct canvas *cv_child, uint8_t x, uint8_t y)
+{
+    for (uint8_t i = 0; i < MIN(cv_child->height, cv->height - y); i++)
+        for (uint8_t j = 0; j < MIN(cv_child->width, cv->width - x); j++)
+            cv->buf[(y + i) * cv->width + (x + j)] = cv_child->buf[i * cv_child->width + j];
+}
+
+void cv_draw_to_fb(struct canvas *cv, struct framebuffer *fb, uint8_t x, uint8_t y)
+{
+    for (uint8_t i = 0; i < MIN(cv->height, CONFIG_HC_MATRIX_HEIGHT - y); i++)
+        for (uint8_t j = 0; j < MIN(cv->width, CONFIG_HC_MATRIX_WIDTH - x); j++)
+            fb->buf[y + i][x + j] = cv->buf[i * cv->width + j];
+
+    fb_refresh(fb);
 }

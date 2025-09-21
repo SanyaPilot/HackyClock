@@ -24,5 +24,7 @@ void cv_draw_line_h(struct canvas *cv, uint8_t x1, uint8_t x2, uint8_t y, crgb c
 void cv_draw_rect(struct canvas *cv, uint8_t x1, uint8_t x2, uint8_t y1, uint8_t y2, crgb color);
 void cv_draw_symbol(struct canvas *cv, const struct bitmap_font *font, uint8_t sym_idx, uint8_t x, uint8_t y, crgb color);
 void cv_draw_image(struct canvas *cv, struct image_desc *img, uint8_t x, uint8_t y);
+void cv_draw_cv(struct canvas *cv, struct canvas *cv_child, uint8_t x, uint8_t y);
+void cv_draw_to_fb(struct canvas *cv, struct framebuffer *fb, uint8_t x, uint8_t y);
 
 #endif
