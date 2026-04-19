@@ -1,5 +1,6 @@
 #include <stdint.h>
 #include <string.h>
+#include "freertos/FreeRTOS.h"
 #include "framebuffer.h"
 #include "led_strip.h"
 #include "sdkconfig.h"
