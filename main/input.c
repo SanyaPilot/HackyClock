@@ -1,10 +1,15 @@
-#include "freertos/FreeRTOS.h"
-#include "driver/gpio.h"
+#include <stdint.h>
 #include "esp_log.h"
-#include "esp_timer.h"
 
 #include "app_manager.h"
 #include "sdkconfig.h"
+
+static const char *TAG = "input";
+
+#if CONFIG_HC_INP_TYPE_TOUCH_ARRAY
+#include "freertos/FreeRTOS.h"
+#include "driver/gpio.h"
+#include "esp_timer.h"
 
 #define MIN_SWIPE_DELAY CONFIG_HC_INP_MIN_SWIPE_DELAY * 1000
 
@@ -30,7 +35,6 @@ struct gpio_event {
     uint8_t level;
 };
 
-static const char *TAG = "input";
 static QueueHandle_t gpio_events = NULL;
 
 static void IRAM_ATTR gpio_isr_handler(void* arg)
@@ -136,3 +140,42 @@ void init_gpio_buttons(void)
         gpio_isr_handler_add(button_gpios[i], gpio_isr_handler, (void*) (uint32_t) button_gpios[i]);
     }
 }
+
+#elif CONFIG_HC_INP_TYPE_BUTTONS
+#include "iot_button.h"
+#include "button_gpio.h"
+
+static void left_button_callback(void *handle, void *data)
+{
+    ESP_LOGD(TAG, "Left button clicked");
+    am_send_msg(AM_MSG_PREVAPP);
+}
+
+static void right_button_callback(void *handle, void *data)
+{
+    ESP_LOGD(TAG, "Right button clicked");
+    am_send_msg(AM_MSG_NEXTAPP);
+}
+
+static void center_button_callback(void *handle, void *data)
+{
+    ESP_LOGD(TAG, "Center button clicked");
+    am_send_input_event(EVENT_BTN_CLICK);
+}
+
+static void init_button(button_config_t btn_cfg, uint8_t gpio_num, button_cb_t callback)
+{
+    const button_gpio_config_t gpio_cfg = { .gpio_num = gpio_num, .active_level = 0 };
+    button_handle_t handle;
+    iot_button_new_gpio_device(&btn_cfg, &gpio_cfg, &handle);
+    iot_button_register_cb(handle, BUTTON_SINGLE_CLICK, NULL, callback, NULL);
+}
+
+void init_gpio_buttons(void)
+{
+    const button_config_t btn_cfg = { .short_press_time = CONFIG_HC_INP_CLICK_TIME_MS, .long_press_time = 0 };
+    init_button(btn_cfg, CONFIG_HC_INP_LEFT_BUTTON_GPIO, left_button_callback);
+    init_button(btn_cfg, CONFIG_HC_INP_CENTER_BUTTON_GPIO, center_button_callback);
+    init_button(btn_cfg, CONFIG_HC_INP_RIGHT_BUTTON_GPIO, right_button_callback);
+}
+#endif

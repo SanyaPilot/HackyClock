@@ -67,30 +67,48 @@ menu "HackyClock configuration"
 
     menu "Controls"
         config HC_INP_LEFT_BUTTON_GPIO
-            int "Left touch button GPIO"
+            int "Left button GPIO"
             default 25
 
         config HC_INP_CENTER_BUTTON_GPIO
-            int "Center touch button GPIO"
+            int "Center button GPIO"
             default 26
 
         config HC_INP_RIGHT_BUTTON_GPIO
-            int "Right touch button GPIO"
+            int "Right button GPIO"
             default 27
+        
+        choice HC_INP_TYPE
+            prompt "Controls type"
+            default HC_INP_TYPE_TOUCH_ARRAY
+            config HC_INP_TYPE_TOUCH_ARRAY
+                bool "Touch button array (for swipes)"
+            config HC_INP_TYPE_BUTTONS
+                bool "Buttons"
+        endchoice
 
         config HC_INP_GESTURE_TIMEOUT
             int "Swipe gesture timeout (ms)"
+            depends on HC_INP_TYPE_TOUCH_ARRAY
             default 100
             help
                 Amount of time to wait for the next event during swipe
 
         config HC_INP_MIN_SWIPE_DELAY
             int "Minimum delay between swipe events (ms)"
+            depends on HC_INP_TYPE_TOUCH_ARRAY
             default 15
             help
                 Specifies how much time must pass to interpret a gesture as a swipe.
                 Increasing will require more slow swipes, decreasing can lead to the broken click gesture
                 when more than one button is touched
+        
+        config HC_INP_CLICK_TIME_MS
+            int "Click time (ms)"
+            depends on HC_INP_TYPE_BUTTONS
+            default 50
+            help
+                Amount of time for button to be pressed to register a click
 
     endmenu
 
