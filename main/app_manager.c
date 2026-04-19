@@ -21,6 +21,7 @@ struct am_window_data
 
 static TaskHandle_t am_handle = NULL;
 static struct am_window_data win_data[CONFIG_HC_AM_MAX_APPS];
+static struct am_app_info *app_info = NULL;
 static uint8_t win_idx = 0;
 
 static void redraw_fb(struct framebuffer *fb, struct canvas *cv)
@@ -72,7 +73,7 @@ static int launch_window_task(struct am_app_info info, struct am_window_data *da
 static void window_manager_task(void *param)
 {
     struct am_params *params = (struct am_params *)param;
-    struct am_app_info *app_info = params->apps;
+    app_info = params->apps;
     struct framebuffer *fb = params->framebuffer;
 
     // Allocate memory for canvases
@@ -171,4 +172,10 @@ void am_send_msg_from_isr(uint32_t message, BaseType_t *higher_task_wakeup)
 void am_send_input_event(uint32_t event)
 {
     xTaskNotify(win_data[win_idx].handle, event, eSetBits);
+}
+
+// TODO: Rework app info gathering
+struct am_app_info *get_apps_list()
+{
+    return app_info;
 }

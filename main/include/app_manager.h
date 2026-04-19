@@ -30,4 +30,5 @@ void launch_am_task(struct am_params *params);
 void am_send_msg(uint32_t message);
 void am_send_msg_from_isr(uint32_t message, BaseType_t *higher_task_wakeup);
 void am_send_input_event(uint32_t event);
+struct am_app_info *get_apps_list();
 #endif

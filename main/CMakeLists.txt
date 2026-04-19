@@ -8,6 +8,7 @@ idf_component_register(SRCS "main.c"
                             "animations.c"
                             "http_client.c"
                             "mqtt.c"
+                            "http_api.c"
                     INCLUDE_DIRS "." "include" "../external/qoi")
 
 set(image ../fatfs_image)

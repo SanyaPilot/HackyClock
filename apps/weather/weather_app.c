@@ -12,6 +12,8 @@
 #include "http_client.h"
 
 #include "image_utils.h"
+
+#define JSMN_HEADER
 #include "jsmn.h"
 
 #define API_FETCH_DELAY         (CONFIG_WEATHER_FETCH_DELAY * 1000)

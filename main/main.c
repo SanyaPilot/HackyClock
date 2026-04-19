@@ -14,6 +14,7 @@
 #include "framebuffer.h"
 #include "app_manager.h"
 #include "apps.h"
+#include "http_api.h"
 
 // LED strip definitions
 #if CONFIG_HC_STRIP_LED_TYPE_WS2812
@@ -219,4 +220,6 @@ void app_main(void)
 
     // Init GPIO buttons input handler
     init_gpio_buttons();
+
+    start_http_server();
 }
