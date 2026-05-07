@@ -23,27 +23,27 @@ static void draw_clock(struct canvas *cv, struct tm *tm, uint8_t style, crgb col
     switch (style) {
         case STYLE_SMALL:
             // Draw hours
-            cv_draw_symbol(cv, &digits_3x5_font, tm->tm_hour / 10,
+            cv_draw_symbol(cv, &digits_3x5_font, DIGIT_TO_CHAR(tm->tm_hour / 10),
                            start_x_sm, start_y_sm, color);
-            cv_draw_symbol(cv, &digits_3x5_font, tm->tm_hour % 10,
+            cv_draw_symbol(cv, &digits_3x5_font, DIGIT_TO_CHAR(tm->tm_hour % 10),
                            start_x_sm + 1 + digits_3x5_font.width, start_y_sm, color);
             // Draw minutes
-            cv_draw_symbol(cv, &digits_3x5_font, tm->tm_min / 10,
+            cv_draw_symbol(cv, &digits_3x5_font, DIGIT_TO_CHAR(tm->tm_min / 10),
                            start_x_sm + 3 + digits_3x5_font.width * 2, start_y_sm, color);
-            cv_draw_symbol(cv, &digits_3x5_font, tm->tm_min % 10,
+            cv_draw_symbol(cv, &digits_3x5_font, DIGIT_TO_CHAR(tm->tm_min % 10),
                            start_x_sm + 4 + digits_3x5_font.width * 3, start_y_sm, color);
             break;
         
         case STYLE_LARGE:
             // Draw hours
-            cv_draw_symbol(cv, &digits_7x7_font, tm->tm_hour / 10,
+            cv_draw_symbol(cv, &digits_7x7_font, DIGIT_TO_CHAR(tm->tm_hour / 10),
                            start_x_lg, start_y_lg, color);
-            cv_draw_symbol(cv, &digits_7x7_font, tm->tm_hour % 10,
+            cv_draw_symbol(cv, &digits_7x7_font, DIGIT_TO_CHAR(tm->tm_hour % 10),
                            start_x_lg + 2 + digits_7x7_font.width, start_y_lg, color);
             // Draw minutes
-            cv_draw_symbol(cv, &digits_7x7_font, tm->tm_min / 10,
+            cv_draw_symbol(cv, &digits_7x7_font, DIGIT_TO_CHAR(tm->tm_min / 10),
                            start_x_lg, start_y_lg + 2 + digits_7x7_font.height, color);
-            cv_draw_symbol(cv, &digits_7x7_font, tm->tm_min % 10,
+            cv_draw_symbol(cv, &digits_7x7_font, DIGIT_TO_CHAR(tm->tm_min % 10),
                            start_x_lg + 2 + digits_7x7_font.width, start_y_lg + 2 + digits_7x7_font.height, color);
             break;
     }

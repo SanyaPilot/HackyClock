@@ -9,7 +9,7 @@ idf_component_register(SRCS "main.c"
                             "http_client.c"
                             "mqtt.c"
                             "http_api.c"
-                    INCLUDE_DIRS "." "include" "../external/qoi")
+                    INCLUDE_DIRS "." "include" "../external/qoi" "../fonts/")
 
 set(image ../fatfs_image)
 fatfs_create_spiflash_image(storage ${image} FLASH_IN_PROJECT PRESERVE_TIME)

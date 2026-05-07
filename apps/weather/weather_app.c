@@ -174,8 +174,8 @@ static void draw_canvas(struct canvas *cv, struct image_desc *icons)
     int8_t temp = abs(cur_weather.temperature);
     bool is_negative = cur_weather.temperature < 0;
     if (temp >= 10)
-        cv_draw_symbol(cv, &digits_3x5_font, temp / 10, digits_x, digits_y, color);
-    cv_draw_symbol(cv, &digits_3x5_font, temp % 10, digits_x + digits_3x5_font.width + 1, digits_y, color);
+        cv_draw_symbol(cv, &digits_3x5_font, DIGIT_TO_CHAR(temp / 10), digits_x, digits_y, color);
+    cv_draw_symbol(cv, &digits_3x5_font, DIGIT_TO_CHAR(temp % 10), digits_x + digits_3x5_font.width + 1, digits_y, color);
     if (is_negative) {
         uint8_t minus_sign_x = (temp >= 10 ? (digits_x - 1) : (digits_x + digits_3x5_font.width)) - 3;
         cv_draw_line_h(cv, minus_sign_x, minus_sign_x + 2, digits_y + 2, color);

@@ -1,6 +1,7 @@
 #include <stdint.h>
 #include <string.h>
 #include <sys/param.h>
+#include "fonts.h"
 #include "freertos/FreeRTOS.h"
 #include "esp_log.h"
 #include "canvas.h"
@@ -78,14 +79,81 @@ void cv_draw_rect(struct canvas *cv, uint8_t x1, uint8_t x2, uint8_t y1, uint8_t
     cv_draw_line_v(cv, x2, y1, y2, color);
 }
 
-void cv_draw_symbol(struct canvas *cv, const struct bitmap_font *font, uint8_t sym_idx, uint8_t x, uint8_t y, crgb color)
+uint8_t cv_draw_symbol_utf8(struct canvas *cv, const struct bitmap_font *font, const char *sym, uint8_t x, uint8_t y, crgb color)
 {
-    const uint8_t font_high_bit = 1 << (font->height - 1);
-    const uint8_t start_pos = sym_idx * font->width;
+    // Simple UTF-8 decoder here
+    uint32_t codepoint;
+    uint8_t cp_size = 0;
+    if ((sym[0] & 0x80) == 0) {
+        // ASCII
+        codepoint = sym[0];
+        cp_size = 1;
+    } else if ((sym[0] & 0xE0) == 0xC0) {   // 0x110...
+        // 2 bytes
+        codepoint = ((sym[0] & 0x1F) << 6) | (sym[1] & 0x3F);           // 0b110xxxyy 0b10yyzzzz -> 0b0xxxyyyyzzzz
+        cp_size = 2;
+    } else if ((sym[0] & 0xF0) == 0xE0) {   // 0x1110...
+        // 3 bytes
+        codepoint = ((sym[0] & 0x0F) << 12) | ((sym[1] & 0x3F) << 6) |  // 0b1110wwww 0b10xxxxyy 0b10yyzzzz -> 0bwwwwxxxxyyyyzzzz
+                    (sym[2] & 0x3F);
+        cp_size = 3;
+    } else if ((sym[0] & 0xF8) == 0xF0) {   // 0x11110...
+        // 4 bytes
+        codepoint = ((sym[0] & 0x0F) << 18) | ((sym[1] & 0x3F) << 12) | // same but 22 bits
+                    ((sym[2] & 0x3F) << 6)  | (sym[2] & 0x3F);
+        cp_size = 4;
+    } else
+        return 0;
+
+    cv_draw_symbol(cv, font, codepoint, x, y, color);
+    return cp_size;
+}
+
+void cv_draw_symbol(struct canvas *cv, const struct bitmap_font *font, uint32_t sym, uint8_t x, uint8_t y, crgb color)
+{
+    // Find codepoint in our font by ranges
+    uint32_t prev_end = 0, offset = 0;
+    bool found = false;
+    for (const struct sym_range *r = font->ranges; r->end != 0; r++) {
+        offset += r->begin - prev_end;
+        if (r->begin <= sym && sym <= r->end) {
+            found = true;
+            break;
+        }
+        prev_end = r->end + 1;
+    }
+    if (!found) {
+        ESP_LOGW("text_dbg", "can't find symbol in the font: %d", sym);
+        return;
+    }
+    ESP_LOGI("text_dbg", "offset = %d for sym %d", offset, sym);
+    sym -= offset;
+    // const uint8_t font_high_bit = 1 << (font->height - 1);
+    const uint32_t start_pos = sym * font->width;
     for (uint8_t i = 0; i < font->width; i++) {
+        if (x + i >= cv->width)
+            break;
         uint8_t font_col = font->data[start_pos + i];
-        for (uint8_t j = 0; j < font->height; j++)
-            cv_set_pixel(cv, x + i, y + j, font_col & (font_high_bit >> j) ? color : crgb_black);
+        for (uint8_t j = 0; j < font->height; j++) {
+            if (y + j >= cv->height)
+                break;
+            cv_set_pixel(cv, x + i, y + j, font_col & (1 << j) ? color : crgb_black);
+        }
+    }
+}
+
+void cv_draw_text(struct canvas *cv, const struct bitmap_font *font, const char *string, uint8_t x, uint8_t y, crgb color)
+{
+    size_t len = strlen(string);
+    uint8_t x_off = x;
+    for (size_t i = 0; i < len; ) {
+        uint8_t cp_size = cv_draw_symbol_utf8(cv, font, &string[i], x_off, y, color);
+        if (!cp_size)
+            return;
+        i += cp_size;
+        x_off += font->width;
+        if (x_off >= cv->width)
+            break;
     }
 }
 
