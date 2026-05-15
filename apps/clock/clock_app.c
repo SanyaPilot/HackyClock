@@ -21,18 +21,7 @@ uint8_t start_x_sm, start_y_sm;
 uint8_t start_x_lg, start_y_lg;
 uint8_t start_x_wday, start_y_date;
 
-char* weekday(struct tm *tm) {
-    switch (tm->tm_wday) {
-        case (0): return "ВС";
-        case (1): return "ПН";
-        case (2): return "ВТ";
-        case (3): return "СР";
-        case (4): return "ЧТ";
-        case (5): return "ПТ";
-        case (6): return "СБ";
-        default: return "";
-    }
-}
+const char* weekday[] = {"ВС", "ПН", "ВТ", "СР", "ЧТ", "ПТ", "СБ"};
 
 static void draw_clock(struct canvas *cv, struct tm *tm, uint8_t style, crgb color)
 {
@@ -74,7 +63,7 @@ static void draw_clock(struct canvas *cv, struct tm *tm, uint8_t style, crgb col
             cv_draw_symbol(cv, &digits_3x5_font, DIGIT_TO_CHAR((tm->tm_mon + 1) % 10),
                            start_x_sm + digits_3x5_font.width * 3 + 4, start_y_date, color);
             // Draw a weekday
-            cv_draw_text(cv, &spleen_5x8_font, weekday(tm),
+            cv_draw_text(cv, &spleen_5x8_font, weekday[tm->tm_wday],
                          start_x_wday, start_y_date + digits_3x5_font.height + 1, color);
             break;
     }
