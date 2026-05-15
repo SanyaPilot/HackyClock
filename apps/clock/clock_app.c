@@ -12,11 +12,27 @@
 
 enum clock_style {
     STYLE_SMALL = 0,
-    STYLE_LARGE
+    STYLE_LARGE,
+    STYLE_DATE,
+    STYLE_COUNT
 };
 
 uint8_t start_x_sm, start_y_sm;
 uint8_t start_x_lg, start_y_lg;
+uint8_t start_x_wday, start_y_date;
+
+char* weekday(struct tm *tm) {
+    switch (tm->tm_wday) {
+        case (0): return "ВС";
+        case (1): return "ПН";
+        case (2): return "ВТ";
+        case (3): return "СР";
+        case (4): return "ЧТ";
+        case (5): return "ПТ";
+        case (6): return "СБ";
+        default: return "";
+    }
+}
 
 static void draw_clock(struct canvas *cv, struct tm *tm, uint8_t style, crgb color)
 {
@@ -46,6 +62,21 @@ static void draw_clock(struct canvas *cv, struct tm *tm, uint8_t style, crgb col
             cv_draw_symbol(cv, &digits_7x7_font, DIGIT_TO_CHAR(tm->tm_min % 10),
                            start_x_lg + 2 + digits_7x7_font.width, start_y_lg + 2 + digits_7x7_font.height, color);
             break;
+        case STYLE_DATE:
+            // Draw a day
+            cv_draw_symbol(cv, &digits_3x5_font, DIGIT_TO_CHAR(tm->tm_mday / 10),
+                           start_x_sm, start_y_date, color);
+            cv_draw_symbol(cv, &digits_3x5_font, DIGIT_TO_CHAR(tm->tm_mday % 10),
+                           start_x_sm + 1 + digits_3x5_font.width, start_y_date, color);
+            // Draw a month
+            cv_draw_symbol(cv, &digits_3x5_font, DIGIT_TO_CHAR((tm->tm_mon + 1) / 10),
+                           start_x_sm + digits_3x5_font.width * 2 + 3, start_y_date, color);
+            cv_draw_symbol(cv, &digits_3x5_font, DIGIT_TO_CHAR((tm->tm_mon + 1) % 10),
+                           start_x_sm + digits_3x5_font.width * 3 + 4, start_y_date, color);
+            // Draw a weekday
+            cv_draw_text(cv, &spleen_5x8_font, weekday(tm),
+                         start_x_wday, start_y_date + digits_3x5_font.height + 1, color);
+            break;
     }
 
     am_send_msg(AM_MSG_REFRESH);
@@ -69,6 +100,10 @@ void clock_ui_task(void *param)
     start_x_lg = (cv->width - (digits_7x7_font.width * 2 + 2)) / 2;
     start_y_lg = (cv->height - (digits_7x7_font.height * 2 + 2)) / 2;
 
+    // Date style
+    start_x_wday = (cv->width - ((spleen_5x8_font.width - 1) * 2)) / 2;
+    start_y_date = (cv->width - (digits_3x5_font.height + spleen_5x8_font.height - 1)) / 2;
+
     const crgb color = {255, 255, 255};
     uint8_t style = STYLE_SMALL;
 
@@ -91,7 +126,7 @@ void clock_ui_task(void *param)
 
         if (message == EVENT_BTN_CLICK) {
             // Switch clock style
-            style = !style;
+            style = (style + 1) % STYLE_COUNT;
             anim_fade_out(cv, FADE_ANIM_DURATION, FADE_ANIM_DELAY);
             struct canvas *temp_cv = cv_copy(cv);
             draw_clock(temp_cv, &timeinfo, style, color);
