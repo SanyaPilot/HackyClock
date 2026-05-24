@@ -6,5 +6,6 @@
 
 void anim_fade_out(struct canvas *cv, uint32_t duration_ms, uint32_t delay_ms);
 void anim_fade_in(struct canvas *cv, struct canvas *cv_new, uint32_t duration_ms, uint32_t delay_ms);
+void scrolling_text(struct canvas *cv, struct canvas *cv_text, uint32_t duration_ms, uint32_t delay_ms);
 
 #endif
